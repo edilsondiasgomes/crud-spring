@@ -1,6 +1,7 @@
 package com.edilson.service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -8,37 +9,47 @@ import javax.validation.constraints.Positive;
 
 import org.springframework.stereotype.Service;
 
+import com.edilson.dto.CourseDTO;
+import com.edilson.dto.mapper.CourseMapper;
 import com.edilson.exception.RecordNotFoundException;
-import com.edilson.model.Course;
 import com.edilson.repository.CourseRepository;
 
 @Service
 public class CourseService {
 
     private final CourseRepository courseRepository;
+    private final CourseMapper courseMapper;
 
-    public CourseService(CourseRepository courseRepository) {
+    public CourseService(CourseRepository courseRepository, CourseMapper courseMapper) {
         this.courseRepository = courseRepository;
+        this.courseMapper = courseMapper;
     }
 
-    public List<Course> List() {
-        return courseRepository.findAll();
+    public List<CourseDTO> List() {
+        return courseRepository.findAll()
+                .stream()
+                // .map(course -> courseMapper.toDTO(course)) é a mesma coisa que a lambda
+                // (linha de baixo)
+                .map(courseMapper::toDTO)
+                .collect(Collectors.toList());
     }
 
-    public Course findById(@NotNull @Positive Long id) {
-        return courseRepository.findById(id).orElseThrow(() -> new RecordNotFoundException(id));
+    public CourseDTO findById(@NotNull @Positive Long id) {
+        return courseRepository.findById(id)
+                .map(courseMapper::toDTO)
+                .orElseThrow(() -> new RecordNotFoundException(id));
     }
 
-    public Course create(@Valid Course course) {
-        return courseRepository.save(course);
+    public CourseDTO create(@Valid CourseDTO courseDTO) {
+        return courseMapper.toDTO(courseRepository.save(courseMapper.toEntity(courseDTO)));
     }
 
-    public Course update(@NotNull @Positive Long id, @Valid Course course) {
+    public CourseDTO update(@NotNull @Positive Long id, @Valid CourseDTO courseDTO) {
         return courseRepository.findById(id)
                 .map(recordFound -> {
-                    recordFound.setName(course.getName());
-                    recordFound.setCategory(course.getCategory());
-                    return courseRepository.save(recordFound);
+                    recordFound.setName(courseDTO.getName());
+                    recordFound.setCategory(courseDTO.getCategory());
+                    return courseMapper.toDTO(courseRepository.save(recordFound));
                 }).orElseThrow(() -> new RecordNotFoundException(id));
     }
 
