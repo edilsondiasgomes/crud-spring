@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import com.edilson.dto.CourseDTO;
 import com.edilson.dto.mapper.CourseMapper;
 import com.edilson.exception.RecordNotFoundException;
+import com.edilson.model.Course;
 import com.edilson.repository.CourseRepository;
 
 @Service
@@ -47,8 +48,11 @@ public class CourseService {
     public CourseDTO update(@NotNull @Positive Long id, @Valid CourseDTO courseDTO) {
         return courseRepository.findById(id)
                 .map(recordFound -> {
+                    Course course = courseMapper.toEntity(courseDTO);
                     recordFound.setName(courseDTO.getName());
-                    recordFound.setCategory(courseDTO.getCategory());
+                    recordFound.setCategory(courseMapper.converteCategoryValue(courseDTO.getCategory()));
+                    recordFound.getLessons().clear();
+                    course.getLessons().forEach(lesson -> recordFound.getLessons().add(lesson));
                     return courseMapper.toDTO(courseRepository.save(recordFound));
                 }).orElseThrow(() -> new RecordNotFoundException(id));
     }

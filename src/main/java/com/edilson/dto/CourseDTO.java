@@ -1,5 +1,7 @@
 package com.edilson.dto;
 
+import java.util.List;
+
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
@@ -31,4 +33,6 @@ public class CourseDTO {
     @Pattern(regexp = "Ativo|Inativo")
     private String status = "Ativo";
 
+    @NotNull
+    private List<LessonDTO> lessons;
 }
